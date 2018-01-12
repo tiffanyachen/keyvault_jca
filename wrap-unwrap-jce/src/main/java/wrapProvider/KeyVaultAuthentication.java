@@ -1,10 +1,6 @@
 package wrapProvider;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -12,18 +8,9 @@ import java.util.concurrent.Future;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
-import com.microsoft.azure.AzureResponseBuilder;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.authentication.KeyVaultCredentials;
-import com.microsoft.azure.keyvault.models.Attributes;
-
-import com.microsoft.azure.management.resources.fluentcore.utils.ResourceManagerThrottlingInterceptor;
-import com.microsoft.azure.management.resources.fluentcore.utils.SdkContext;
-import com.microsoft.azure.serializer.AzureJacksonAdapter;
-import com.microsoft.rest.LogLevel;
-import com.microsoft.rest.RestClient;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
-import com.microsoft.rest.interceptors.LoggingInterceptor;
 
 public class KeyVaultAuthentication {
 
@@ -51,7 +38,7 @@ public class KeyVaultAuthentication {
 		String clientId = config.getClientId();
 
 		if (clientId == null) {
-			throw new Exception("Please inform arm.clientid in the environment settings.");
+			throw new Exception("Please put clientId in the configuration file.");
 		}
 
 		String clientKey = config.getClientSecret();
@@ -70,7 +57,7 @@ public class KeyVaultAuthentication {
 
 			if (future == null) {
 				throw new Exception(
-						"Missing or ambiguous credentials - please inform exactly one of arm.clientkey or arm.password in the environment settings.");
+						"Missing or ambiguous credentials - please put clientSecret in the configuration file.");
 			}
 
 			result = future.get();
@@ -79,18 +66,17 @@ public class KeyVaultAuthentication {
 		}
 
 		if (result == null) {
-			throw new RuntimeException("authentication result was null");
+			throw new RuntimeException("Authentication result was null.");
 		}
 		return result;
 	}
 
-	private static ServiceClientCredentials createTestCredentials(final Config config) throws Exception {
+	private static ServiceClientCredentials createKeyVaultCredentials(final Config config) throws Exception {
 		return new KeyVaultCredentials() {
 
 			@Override
 			public String doAuthenticate(String authorization, String resource, String scope) {
 				try {
-
 					AuthenticationResult authResult = getAccessToken(authorization, resource, config);
 					return authResult.getAccessToken();
 
@@ -99,18 +85,14 @@ public class KeyVaultAuthentication {
 				}
 			}
 		};
-
 	}
 
 	public void initializeClients() throws IOException {
 		try {
-			keyVaultClient = new KeyVaultClient(createTestCredentials(this.config));
+			keyVaultClient = new KeyVaultClient(createKeyVaultCredentials(this.config));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	protected RestClient buildRestClient(RestClient.Builder builder) {
-		return builder.build();
-	}
 }
