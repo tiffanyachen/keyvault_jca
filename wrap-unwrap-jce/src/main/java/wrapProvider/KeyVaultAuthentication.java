@@ -1,6 +1,5 @@
 package wrapProvider;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -87,12 +86,8 @@ public class KeyVaultAuthentication {
 		};
 	}
 
-	public void initializeClients() throws IOException {
-		try {
-			keyVaultClient = new KeyVaultClient(createKeyVaultCredentials(this.config));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void initializeClients() throws Exception {
+		keyVaultClient = new KeyVaultClient(createKeyVaultCredentials(this.config));
 	}
 
 }
