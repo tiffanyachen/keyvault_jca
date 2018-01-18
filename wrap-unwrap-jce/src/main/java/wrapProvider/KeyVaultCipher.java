@@ -6,6 +6,8 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.crypto.BadPaddingException;
@@ -29,6 +31,10 @@ public class KeyVaultCipher extends CipherSpi {
 	String encryptionKeyId;
 	KeyVaultClient keyVaultClient;
 	String algorithm;
+	private static final Map<String, String> TO_KEY_VAULT_ALG_MAP = new HashMap<String, String>() {{
+		put("OAEP", "RSA-OAEP");
+	}};
+	
 	
 	@Override
 	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
@@ -91,7 +97,12 @@ public class KeyVaultCipher extends CipherSpi {
 		}
 		
 		this.encryptionKey = keyVaultKeyIdKey.getEncryptionKey();
-		this.algorithm = params.getAlgorithm();
+		
+		if (TO_KEY_VAULT_ALG_MAP.containsKey(params.getAlgorithm())) {
+			this.algorithm = TO_KEY_VAULT_ALG_MAP.get(params.getAlgorithm());
+		} else {
+			throw new InvalidAlgorithmParameterException("Key Vault only supports OAEP for wrap/unwrap.");
+		}
 	}
 	
 	@Override
