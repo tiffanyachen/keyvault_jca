@@ -3,11 +3,13 @@ package wrapProvider;
 import java.security.AlgorithmParameters;
 import java.security.Key;
 import java.security.SecureRandom;
+import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.junit.Assert;
 
 public class Main {
 	
@@ -22,16 +24,16 @@ public class Main {
 		
 		KeyVaultKeyIdKey key = new KeyVaultKeyIdKey("https://tifchen-keyvault-fancy.vault.azure.net:443/keys/keykey");
 		KeyVaultCipher kvCipher = new KeyVaultCipher();
-		String kid = "https://tifchen-keyvault-fancy.vault.azure.net:443/keys/keykey";
 		kvCipher.engineInit(Cipher.WRAP_MODE, key,  AlgorithmParameters.getInstance("OAEP"), new SecureRandom());
-		
-		SecretKey secretKey = new SecretKeySpec(new byte[10], "RSA");
+        byte[] plainText = new byte[100];
+        new Random(0x1234567L).nextBytes(plainText);
+		SecretKey secretKey = new SecretKeySpec(plainText, "RSA");
+		System.out.println(secretKey.getEncoded());
 		byte[] wrapped = kvCipher.engineWrap(secretKey);
-//		Key newKey = kvCipher.engineUnwrap(wrapped, "RSA-OAEP", 0);
-//		
-//		System.out.println(wrapped);
-//		System.out.println(newKey.getEncoded());
-
+		Key newKey = kvCipher.engineUnwrap(wrapped, "RSA-OAEP", 0);
+		System.out.println(newKey.getEncoded());
+		Assert.assertArrayEquals(secretKey.getEncoded(), newKey.getEncoded());
+		Assert.assertEquals(1, 2);
 	}
 	
 }
